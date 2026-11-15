@@ -61,7 +61,7 @@
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   .wrap {
-    max-width: 1080px;
+    max-width: 1800px;
     margin: 0 auto;
     padding-left: var(--gutter-l);
     padding-right: var(--gutter-r);
@@ -325,6 +325,16 @@
     .about { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-items: start; }
     .section .wrap { padding-block: 80px; }
     .block { margin-top: 80px; }
+  }
+  /* wide laptops: use the screen, keep only a slim margin */
+  @media (min-width: 1200px) {
+    .wrap { padding-left: max(3vw, env(safe-area-inset-left, 0px)); padding-right: max(3vw, env(safe-area-inset-right, 0px)); }
+    .hero-art { width: min(100%, 500px); }
+    .hero .wrap { gap: 64px; }
+    .featured, .early-row { max-width: 1240px; margin-inline: auto; }
+  }
+  @media (min-width: 1600px) {
+    .hero-art { width: min(100%, 540px); }
   }
 
   /* Lightbox */
