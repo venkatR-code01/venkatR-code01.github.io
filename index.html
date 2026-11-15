@@ -476,6 +476,11 @@
     .rudhra, .rudhra i { animation: none !important; }
   }
 </style>
+<style>
+  @media (min-width: 1200px) { .top, main, .foot, .chat-fab { zoom: 1.1; } }
+  @media (min-width: 1400px) { .top, main, .foot, .chat-fab { zoom: 1.2; } }
+  @media (min-width: 1500px) { .top, main, .foot, .chat-fab { zoom: 1.25; } }
+</style>
 </head>
 <body>
 <header class="top">
@@ -1010,7 +1015,8 @@
   function makeRudhra(el, n) {
     var canvas = el.querySelector("canvas");
     if (!canvas) return { think: function (on) { el.classList.toggle("thinking", on); } };
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var shown = el.getBoundingClientRect().width, cssSize = parseFloat(getComputedStyle(el).getPropertyValue("--rs")) || shown || 48;
+    var dpr = Math.min((window.devicePixelRatio || 1) * Math.max(1, shown / cssSize || 1), 3); // stay sharp when the page is scaled up
     var size = parseFloat(getComputedStyle(el).getPropertyValue("--rs")) || el.offsetWidth || 48;
     canvas.width = Math.round(size * dpr); canvas.height = Math.round(size * dpr);
     var ctx = canvas.getContext("2d");
