@@ -85,7 +85,7 @@
   document.addEventListener("dragstart", guard);
   document.querySelectorAll(".zoom img, .lb-stage img").forEach(function (i) { i.setAttribute("draggable", "false"); });
 
-  /* ---------- Rudhra ---------- */
+  /* ---------- Rudra ---------- */
   var reduceAll = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var rudhras = {};
   // Dots for the R: the letter is drawn by hand (no font), then dots are spread evenly over it
@@ -124,7 +124,7 @@
     pts.forEach(function (P, ii) { var m = 1e9; pts.forEach(function (Q, jj) { if (ii !== jj) m = Math.min(m, Math.hypot(P.x - Q.x, P.y - Q.y)); }); sum += m; });
     return { pts: pts, gap: sum / Math.max(1, pts.length) };
   }
-  function makeRudhra(el, n) {
+  function makeRudra(el, n) {
     var canvas = el.querySelector("canvas");
     if (!canvas) return { think: function (on) { el.classList.toggle("thinking", on); } };
     var shown = el.getBoundingClientRect().width, cssSize = parseFloat(getComputedStyle(el).getPropertyValue("--rs")) || shown || 48;
@@ -160,9 +160,9 @@
       ctx.lineWidth = Math.max(.5, W / 140);
       for (var a = 0; a < pts.length; a++) for (var b = a + 1; b < pts.length; b++) {
         var A = pts[a], B = pts[b], dist = Math.hypot(A.dx - B.dx, A.dy - B.dy);
-        if (dist < lk) { ctx.strokeStyle = "rgba(36,24,15," + (alpha * (1 - dist / lk)).toFixed(3) + ")"; ctx.beginPath(); ctx.moveTo(A.dx, A.dy); ctx.lineTo(B.dx, B.dy); ctx.stroke(); }
+        if (dist < lk) { ctx.strokeStyle = "rgba(128,20,44," + (alpha * (1 - dist / lk)).toFixed(3) + ")"; ctx.beginPath(); ctx.moveTo(A.dx, A.dy); ctx.lineTo(B.dx, B.dy); ctx.stroke(); }
       }
-      ctx.fillStyle = "rgba(36,24,15," + Math.min(1, alpha + .15).toFixed(3) + ")";
+      ctx.fillStyle = "rgba(128,20,44," + Math.min(1, alpha + .15).toFixed(3) + ")";
       var r = Math.max(.8, W / 70);
       for (var q = 0; q < pts.length; q++) { ctx.beginPath(); ctx.arc(pts[q].dx, pts[q].dy, r, 0, Math.PI * 2); ctx.fill(); }
       if (!reduceAll || want || form > .01) { running = true; requestAnimationFrame(draw); }
@@ -176,7 +176,7 @@
     return { think: function (on) { want = on; el.classList.toggle("thinking", on); start(); } };
   }
   document.querySelectorAll("[data-rudhra]").forEach(function (el) {
-    rudhras[el.getAttribute("data-rudhra")] = makeRudhra(el, el.getAttribute("data-rudhra") === "card" ? 78 : 46);
+    rudhras[el.getAttribute("data-rudhra")] = makeRudra(el, el.getAttribute("data-rudhra") === "card" ? 78 : 46);
   });
   var thinkTimers = {};
   function rudhraThink(name, on, ms) {
@@ -192,27 +192,27 @@
     if (!reduceAll) setInterval(function () { rudhraThink("card", true, 2600); }, 8000);
   }
 
-  /* ---------- Ask Rudhra ---------- */
+  /* ---------- Ask Rudra ---------- */
   var IG = "@vckymyst";
   var IG_URL = "https://www.instagram.com/vckymyst/";
   var STARTERS = ["Who is Venkat?", "How does he draw?", "What's he building with AI?", "How can I reach him?"];
 
   // Each topic: phrases with weights, the answer, and follow-up questions.
   var KB = [
-    { id: "greeting", p: [["hi",1],["hii",1],["hello",1],["hey",1],["namaste",1],["good morning",1],["good evening",1],["hi rudhra",6],["hello rudhra",6],["hey rudhra",6],["hii rudhra",6]],
-      a: "Hi there, nice to meet you! I'm Rudhra. Ask me anything about Venkat's art or his AI projects.",
+    { id: "greeting", p: [["hi",1],["hii",1],["hello",1],["hey",1],["namaste",1],["good morning",1],["good evening",1],["hi rudhra",6],["hello rudhra",6],["hey rudhra",6],["hii rudhra",6],["hi rudra",6],["hello rudra",6],["hey rudra",6],["hii rudra",6]],
+      a: "Hi there, nice to meet you! I'm Rudra. Ask me anything about Venkat's art or his AI projects.",
       next: STARTERS },
-    { id: "bot", p: [["are you ai",4],["are you a bot",4],["are you real",4],["who are you",4],["chatbot",3],["bot",2],["how do you work",3],["how does this chat work",5],["this chat",3],["human",2],["rudhra",4],["who is rudhra",6],["your name",5],["what are you",4]],
-      a: "I'm Rudhra, Venkat's assistant. I answer from notes he wrote, so I only know what's on this page. A real AI version, running on his own AWS, is next.",
+    { id: "bot", p: [["are you ai",4],["are you a bot",4],["are you real",4],["who are you",4],["chatbot",3],["bot",2],["how do you work",3],["how does this chat work",5],["this chat",3],["human",2],["rudhra",4],["who is rudhra",6],["rudra",4],["who is rudra",6],["your name",5],["what are you",4]],
+      a: "I'm Rudra, Venkat's assistant. I answer from notes he wrote, so I only know what's on this page. A real AI version, running on his own AWS, is next.",
       next: ["Who is Venkat?", "What's he building with AI?"] },
     { id: "self", p: [["about you",7],["tell me about you",8],["about yourself",7],["yourself",4],["introduce yourself",7],["who r u",6],["what do you do",6]],
-      a: "I'm Rudhra, Venkat's assistant on this page. I answer questions about him using notes he wrote. Venkat himself is a graphite artist and AI engineer in Austin, Texas. Ask me about his drawings or his AI projects!",
+      a: "I'm Rudra, Venkat's assistant on this page. I answer questions about him using notes he wrote. Venkat himself is a graphite artist and AI engineer in Austin, Texas. Ask me about his drawings or his AI projects!",
       next: ["How does he draw?", "What's he building with AI?", "Who made you?"] },
     { id: "maker", p: [["who made you",8],["who built you",8],["who created you",8],["who designed you",7],["made you",5],["built you",5],["created you",5],["who made this",7],["who built this",7],["this website",4],["this site",4],["website",3]],
       a: "Venkat built this site, and me, himself. For now I answer from notes he wrote. Next, he's building a real AI version of me on his own AWS.",
       next: ["What's he building with AI?", "How can I reach him?"] },
     { id: "notvenkat", p: [["are you venkat",9],["are you vicky",9],["is this venkat",8],["is this vicky",8],["talking to venkat",7],["talking to vicky",7],["am i talking to",6],["is venkat here",7],["venkat himself",6]],
-      a: "I'm Rudhra, Venkat's assistant, not Venkat himself. To reach him directly, DM him on Instagram: " + IG + ".",
+      a: "I'm Rudra, Venkat's assistant, not Venkat himself. To reach him directly, DM him on Instagram: " + IG + ".",
       next: ["Who is Venkat?", "What can you do?"] },
     { id: "capabilities", p: [["what can you do",8],["what can i ask",8],["what should i ask",7],["what do you know",6],["help",4],["help me",5],["options",3]],
       a: "I can tell you about Venkat's drawings, how he draws, his AI projects, and how to reach him. Pick one to start:",
@@ -426,7 +426,7 @@
     fab.setAttribute("aria-expanded", "true");
     if (!started) {
       started = true;
-      bubble("bot", "Hi! I'm Rudhra, Venkat's assistant ✨ Curious about his drawings, his AI projects, or how to reach him? Just ask.");
+      bubble("bot", "Hi! I'm Rudra, Venkat's assistant ✨ Curious about his drawings, his AI projects, or how to reach him? Just ask.");
       showChips(STARTERS);
     }
     if (finePointer) input.focus(); else closeBtn.focus();
