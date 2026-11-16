@@ -292,7 +292,10 @@
     { id: "contact", p: [["contact",4],["reach",3],["dm",3],["instagram",3],["insta",3],["email",3],["email address",4],["follow",2],["message",2],["connect",2],["see more",3],["more art",3],["socials",3]],
       a: "The best way to reach Venkat is a DM on Instagram: " + IG + ".",
       next: ["Who is Venkat?", "What's he drawing next?"] },
-    { id: "private", p: [["girlfriend",4],["wife",4],["married",4],["marry",4],["marriage",4],["dating",4],["single",1],["salary",4],["visa",4],["how old",4],["age",3],["relationship",4],["religion",3],["caste",4],["phone number",4],["address",2],["partner",4],["life partner",5]],
+    { id: "looks", p: [["height",8],["tall",7],["how tall",9],["weight",8],["skin",8],["skin tone",9],["complexion",9],["look like",8],["looks",6],["handsome",8],["cute",7],["hot",5],["good looking",8],["appearance",8],["eye color",8]],
+      a: "I only share Venkat's art and projects, not personal details. There's a photo of him in the About section, though!",
+      next: ["Who is Venkat?", "How does he draw?"] },
+    { id: "private", p: [["girlfriend",4],["wife",4],["married",4],["marry",4],["marriage",4],["dating",4],["single",1],["salary",4],["visa",4],["how old",4],["age",3],["relationship",4],["religion",3],["caste",4],["phone number",4],["address",2],["partner",4],["life partner",5],["crush",8],["first crush",9],["love life",8],["ex",5],["first love",9],["lover",8]],
       a: "That's something Venkat keeps private. Ask me about his art or his projects instead.",
       next: ["How does he draw?", "What's he building with AI?"] },
     { id: "cooking", p: [["cook",3],["cooking",3],["food",3],["recipe",3],["recipes",3],["chef",3],["kitchen",3]],
@@ -350,6 +353,9 @@
       }
       if (s > bestScore) { bestScore = s; best = KB[i]; }
     }
+    // a lone weak word (like just "Venkat") in a longer question isn't enough to answer
+    var words = t.trim().split(" ").length;
+    if (bestScore < 2 && words > 2 && best.id !== "greeting" && best.id !== "thanks") return FALLBACK;
     return best;
   }
   window.__askMatch = match; // used only for testing
