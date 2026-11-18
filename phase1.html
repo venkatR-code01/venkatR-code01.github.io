@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Know the Blood Cell · Venkat</title>
+<meta name="description" content="Phase 1 of Venkat's medical image AI: upload a microscope image of one blood cell and the model names which of 8 types it is. Runs in your browser.">
+<meta name="theme-color" content="#4A3929">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234A3929'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' text-anchor='middle' fill='%23F4D9A0'%3EV%3C/text%3E%3C/svg%3E">
+<meta property="og:title" content="Know the Blood Cell · Venkat">
+<meta property="og:description" content="Phase 1 of a medical image AI. Upload one blood cell image and see which of 8 types it is.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://venkatr-code01.github.io/phase1.html">
+<meta property="og:image" content="https://venkatr-code01.github.io/p1_neutrophil.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .p1 { padding: 28px 0 56px; }
+  .p1-head { display: grid; gap: 10px; margin-bottom: 28px; }
+  .p1-head h1 { margin: 0; font: 400 clamp(40px, 7vw, 64px)/1 var(--serif); color: var(--gold); letter-spacing: -.01em; }
+  .p1-head p { margin: 0; max-width: 60ch; color: var(--graphite); }
+  .p1-grid { display: grid; gap: 24px; }
+  @media (min-width: 900px) { .p1-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; } }
+
+  .card { background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; padding: 20px; display: grid; gap: 16px; }
+  .card h2 { margin: 0; font: 600 18px/1.3 var(--sans); }
+
+  .drop {
+    display: grid; place-items: center; gap: 10px; text-align: center;
+    min-height: 180px; padding: 22px; border-radius: 12px;
+    border: 1.5px dashed rgba(244, 217, 160, .45); background: rgba(0, 0, 0, .12);
+    cursor: pointer; transition: border-color .2s, background .2s;
+  }
+  .drop:hover, .drop.over { border-color: var(--gold); background: rgba(244, 217, 160, .06); }
+  .drop svg { width: 34px; height: 34px; color: var(--gold); }
+  .drop b { font-weight: 600; }
+  .drop small { color: var(--lead); font-size: 13px; }
+
+  .samples-label { margin: 0; font: 500 12px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--lead); }
+  .samples { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .samples button {
+    appearance: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 0 0 1px var(--frame); position: relative; aspect-ratio: 1;
+  }
+  .samples button img { width: 100%; height: 100%; object-fit: cover; }
+  .samples button span {
+    position: absolute; inset: auto 0 0 0; padding: 3px 4px; font: 500 10px/1.2 var(--sans);
+    background: rgba(22, 15, 10, .72); color: var(--graphite); text-align: center;
+  }
+  .samples button.on, .samples button:hover { box-shadow: 0 0 0 2px var(--gold); }
+
+  .status { margin: 0; font: 400 13px/1.5 var(--mono); color: var(--lead); min-height: 1.5em; }
+  .status.err { color: #F0A58C; }
+
+  .result-empty { color: var(--lead); margin: 0; }
+  .result { display: grid; gap: 18px; }
+  .result[hidden] { display: none; }
+  .res-top { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: center; }
+  .res-top canvas { width: 120px; height: 120px; border-radius: 10px; box-shadow: 0 0 0 1px var(--frame); background: #000; }
+  .res-name { margin: 0; font: 400 36px/1.05 var(--serif); color: var(--gold); }
+  .res-conf { margin: 4px 0 0; font: 500 13px/1.4 var(--mono); color: var(--lead); }
+  .bars { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .bars li { display: grid; grid-template-columns: 9.5em 1fr 3.2em; gap: 10px; align-items: center; font-size: 14px; }
+  .bars .track { display: block; height: 8px; border-radius: 99px; background: rgba(0, 0, 0, .25); overflow: hidden; }
+  .bars .fill { display: block; width: 0; height: 100%; border-radius: 99px; background: var(--amber); transition: width .5s ease; }
+  .bars li:first-child .fill { background: var(--gold); }
+  .bars .pct { font: 500 12px/1 var(--mono); color: var(--lead); text-align: right; }
+  .explain { margin: 0; padding: 14px 16px; border-radius: 10px; background: rgba(0, 0, 0, .14); border-left: 3px solid var(--gold); }
+  .explain b { color: var(--gold); font-weight: 600; }
+  .unsure { margin: 0; padding: 12px 14px; border-radius: 10px; background: rgba(200, 121, 44, .16); border: 1px solid rgba(200, 121, 44, .5); font-size: 14px; }
+  .unsure[hidden] { display: none; }
+
+  .p1-facts { display: grid; gap: 10px; margin: 28px 0 0; padding: 0; list-style: none; }
+  @media (min-width: 700px) { .p1-facts { grid-template-columns: repeat(3, 1fr); } }
+  .p1-facts li { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; font-size: 14px; }
+  .p1-facts b { display: block; font: 400 26px/1.1 var(--serif); color: var(--gold); margin-bottom: 4px; }
+  .note { margin: 22px 0 0; font-size: 13px; color: var(--lead); max-width: 75ch; }
+  .back { font: 500 14px/1 var(--sans); color: var(--lead); text-decoration: none; }
+  .back:hover { color: var(--graphite); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="./">Venkat</a>
+    <a class="back" href="./#ai">← Back to the site</a>
+  </div>
+</header>
+
+<main class="p1">
+  <div class="wrap">
+    <header class="p1-head">
+      <p class="eyebrow">Medical image AI · Phase 1 · live</p>
+      <h1>Know the blood cell</h1>
+      <p>Pick a sample or upload a microscope image of <strong>one</strong> blood cell. The model names which of 8 types it is and explains it in plain words.</p>
+    </header>
+
+    <div class="p1-grid">
+      <section class="card" aria-labelledby="try-h">
+        <h2 id="try-h">Try it</h2>
+        <label class="drop" id="drop" for="file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <span><b>Upload a cell image</b><br><small>or drag it here · JPG or PNG</small></span>
+        </label>
+        <input id="file" type="file" accept="image/*" class="sr-only">
+        <p class="samples-label">Or try a sample</p>
+        <ul class="samples" id="samples"></ul>
+        <p class="status" id="status" role="status">Loading the model…</p>
+      </section>
+
+      <section class="card" aria-labelledby="res-h" aria-live="polite">
+        <h2 id="res-h">Result</h2>
+        <p class="result-empty" id="empty">Your result shows up here.</p>
+        <div class="result" id="result" hidden>
+          <div class="res-top">
+            <canvas id="preview" width="240" height="240" aria-label="The image you chose"></canvas>
+            <div>
+              <p class="res-name" id="res-name"></p>
+              <p class="res-conf" id="res-conf"></p>
+            </div>
+          </div>
+          <p class="unsure" id="unsure" hidden>The model isn't sure about this one. It works best on one stained blood cell in the middle of the image, like the samples.</p>
+          <ul class="bars" id="bars" aria-label="Top guesses"></ul>
+          <p class="explain" id="explain"></p>
+        </div>
+      </section>
+    </div>
+
+    <ul class="p1-facts">
+      <li><b>99.1%</b>correct on 3,421 test images the model never saw while learning</li>
+      <li><b>8 types</b>basophil, eosinophil, erythroblast, immature granulocyte, lymphocyte, monocyte, neutrophil, platelet</li>
+      <li><b>On your device</b>the model runs in your browser, so your image is never uploaded</li>
+    </ul>
+    <p class="note">A research project, not a medical tool: it never gives a diagnosis. Trained on open-source medical image data from one lab, so images from other microscopes or phone cameras may score lower. For any health worry, please see a doctor.</p>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© 2026 Venkat</span>
+    <a href="https://www.instagram.com/vckymyst/" target="_blank" rel="noopener">@vckymyst</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/ort.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  var MODEL = "bloodcell_model.onnx";
+  var SIZE = 224, MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225];
+  var LABELS = ["Basophil", "Eosinophil", "Erythroblast", "Immature granulocyte", "Lymphocyte", "Monocyte", "Neutrophil", "Platelet"];
+  var INFO = {
+    "Basophil": "The rarest white blood cell, usually under 1% of them. It's packed with dark grains that hold histamine, and it plays a part in allergic reactions.",
+    "Eosinophil": "A white blood cell with bright orange-red grains. It helps fight parasites and is involved in allergies and asthma. Usually about 1–4% of white cells.",
+    "Erythroblast": "A young red blood cell that still has its nucleus (center). These normally stay in the bone marrow until they mature.",
+    "Immature granulocyte": "A young white blood cell that normally finishes growing in the bone marrow, then becomes a neutrophil, eosinophil or basophil.",
+    "Lymphocyte": "A small white blood cell with a big round center. These are the immune system's memory: some make antibodies, others attack infected cells.",
+    "Monocyte": "The largest white blood cell, often with a folded, kidney-shaped center. It moves into tissues and becomes a cleaner cell that eats germs and debris.",
+    "Neutrophil": "The most common white blood cell. It's the first responder against bacteria, and its center is split into 2–5 linked lobes.",
+    "Platelet": "Not a full cell but a tiny fragment. Platelets clump together to help blood clot and stop bleeding."
+  };
+  var UNSURE_BELOW = 0.55;   // top score under this means "not sure"
+
+  var statusEl = document.getElementById("status");
+  var session = null, busy = false;
+  function status(t, err) { statusEl.textContent = t; statusEl.classList.toggle("err", !!err); }
+  function track(path, title) { try { document.dispatchEvent(new CustomEvent("venkat:event", { detail: { path: path, title: title } })); } catch (e) {} }
+
+  // samples
+  var list = document.getElementById("samples");
+  LABELS.forEach(function (name) {
+    var slug = name.toLowerCase().replace(/ /g, "_");
+    var li = document.createElement("li"), b = document.createElement("button"), img = document.createElement("img"), s = document.createElement("span");
+    b.type = "button"; b.setAttribute("aria-label", "Try the " + name + " sample");
+    img.src = "p1_" + slug + ".jpg"; img.alt = ""; img.width = 112; img.height = 112; img.loading = "lazy";
+    s.textContent = name.replace("Immature granulocyte", "Immature gran.");
+    b.appendChild(img); b.appendChild(s); li.appendChild(b); list.appendChild(li);
+    b.addEventListener("click", function () {
+      list.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      var im = new Image(); im.onload = function () { classify(im, "sample: " + name); }; im.src = img.src;
+    });
+  });
+
+  // upload
+  var file = document.getElementById("file"), drop = document.getElementById("drop");
+  function useFile(f) {
+    if (!f || !/^image\//.test(f.type)) { status("Please choose an image file (JPG or PNG).", true); return; }
+    list.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
+    var url = URL.createObjectURL(f), im = new Image();
+    im.onload = function () { classify(im, "upload"); URL.revokeObjectURL(url); };
+    im.onerror = function () { status("That image couldn't be opened. Try a JPG or PNG.", true); URL.revokeObjectURL(url); };
+    im.src = url;
+  }
+  file.addEventListener("change", function () { useFile(file.files[0]); file.value = ""; });
+  ["dragenter", "dragover"].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("over"); }); });
+  ["dragleave", "drop"].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("over"); }); });
+  drop.addEventListener("drop", function (e) { useFile(e.dataTransfer.files[0]); });
+
+  // load the model, with progress
+  function loadModel() {
+    if (!window.ort) { status("Couldn't load the AI engine. Check your connection and refresh.", true); return Promise.reject(); }
+    ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/";
+    ort.env.wasm.numThreads = 1;
+    return fetch(MODEL).then(function (r) {
+      if (!r.ok) throw new Error("model " + r.status);
+      var total = +r.headers.get("content-length") || 16061189, got = 0, chunks = [];
+      if (!r.body || !r.body.getReader) return r.arrayBuffer();
+      var reader = r.body.getReader();
+      return (function pump() {
+        return reader.read().then(function (x) {
+          if (x.done) {
+            var out = new Uint8Array(got), off = 0;
+            chunks.forEach(function (c) { out.set(c, off); off += c.length; });
+            return out.buffer;
+          }
+          chunks.push(x.value); got += x.value.length;
+          status("Loading the model… " + Math.min(99, Math.round(got / total * 100)) + "%");
+          return pump();
+        });
+      })();
+    }).then(function (buf) {
+      return ort.InferenceSession.create(buf, { executionProviders: ["wasm"] });
+    }).then(function (s) {
+      session = s; status("Model ready ✓ Pick a sample or upload an image.");
+    }).catch(function (e) {
+      status("The model didn't load. Please refresh the page.", true);
+      if (window.console) console.error(e);
+    });
+  }
+  var ready = loadModel();
+
+  // image -> 224x224 tensor (centre square crop, then the same colour scaling used in training)
+  function toTensor(im) {
+    var c = document.createElement("canvas"); c.width = SIZE; c.height = SIZE;
+    var g = c.getContext("2d", { willReadFrequently: true });
+    var w = im.naturalWidth, h = im.naturalHeight, side = Math.min(w, h);
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+    g.drawImage(im, (w - side) / 2, (h - side) / 2, side, side, 0, 0, SIZE, SIZE);
+    var px = g.getImageData(0, 0, SIZE, SIZE).data, n = SIZE * SIZE, data = new Float32Array(3 * n);
+    for (var i = 0; i < n; i++) {
+      for (var ch = 0; ch < 3; ch++) data[ch * n + i] = (px[i * 4 + ch] / 255 - MEAN[ch]) / STD[ch];
+    }
+    var pv = document.getElementById("preview").getContext("2d");
+    pv.drawImage(c, 0, 0, 240, 240);
+    return new ort.Tensor("float32", data, [1, 3, SIZE, SIZE]);
+  }
+  function softmax(z) {
+    var m = Math.max.apply(null, z), e = z.map(function (v) { return Math.exp(v - m); }), s = e.reduce(function (a, b) { return a + b; }, 0);
+    return e.map(function (v) { return v / s; });
+  }
+
+  function classify(im, source) {
+    if (busy) return;
+    if (!session) { status("Still loading the model, one moment…"); ready.then(function () { if (session) classify(im, source); }); return; }
+    busy = true; status("Looking at the cell…");
+    var t0 = performance.now(), x;
+    try { x = toTensor(im); } catch (e) { busy = false; status("That image couldn't be read.", true); return; }
+    var feeds = {}; feeds[session.inputNames[0]] = x;
+    session.run(feeds).then(function (out) {
+      var p = softmax(Array.from(out[session.outputNames[0]].data));
+      show(p, Math.round(performance.now() - t0), source);
+    }).catch(function (e) {
+      status("Something went wrong reading the image. Try another one.", true);
+      if (window.console) console.error(e);
+    }).then(function () { busy = false; });
+  }
+
+  function show(p, ms, source) {
+    var order = p.map(function (v, i) { return i; }).sort(function (a, b) { return p[b] - p[a]; });
+    var top = order[0], name = LABELS[top], conf = p[top];
+    document.getElementById("empty").hidden = true;
+    document.getElementById("result").hidden = false;
+    document.getElementById("res-name").textContent = name;
+    document.getElementById("res-conf").textContent = Math.round(conf * 100) + "% confident · " + ms + " ms";
+    document.getElementById("unsure").hidden = conf >= UNSURE_BELOW;
+    var bars = document.getElementById("bars"); bars.textContent = "";
+    order.slice(0, 3).forEach(function (i) {
+      var li = document.createElement("li"), n = document.createElement("span"), tr = document.createElement("span"),
+          f = document.createElement("span"), pc = document.createElement("span");
+      n.textContent = LABELS[i]; tr.className = "track"; f.className = "fill"; pc.className = "pct";
+      pc.textContent = Math.round(p[i] * 100) + "%"; f.style.width = "0%";
+      tr.appendChild(f); li.appendChild(n); li.appendChild(tr); li.appendChild(pc); bars.appendChild(li);
+      requestAnimationFrame(function () { f.style.width = (p[i] * 100).toFixed(1) + "%"; });
+    });
+    var ex = document.getElementById("explain"); ex.textContent = "";
+    var b = document.createElement("b"); b.textContent = "What is a " + name.toLowerCase() + "? ";
+    ex.appendChild(b); ex.appendChild(document.createTextNode(INFO[name]));
+    status("Done ✓ Try another sample or upload your own.");
+    track("phase1 " + source + " → " + name + " " + Math.round(conf * 100) + "%", conf >= UNSURE_BELOW ? "Phase 1 result" : "Phase 1 UNSURE");
+    window.__p1last = { name: name, conf: conf, p: p };   // used only for testing
+  }
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+  var ENDPOINT = "https://venkat.goatcounter.com/count";
+  var local = location.protocol === "file:" || /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname);
+  var screenSize = [screen.width, screen.height, window.devicePixelRatio || 1].join(",");
+  function send(params) {
+    var parts = [];
+    for (var k in params) {
+      if (params[k] !== undefined && params[k] !== null && params[k] !== "") parts.push(k + "=" + encodeURIComponent(params[k]));
+    }
+    parts.push("rnd=" + Math.random().toString(36).slice(2, 9));
+    var url = ENDPOINT + "?" + parts.join("&");
+    if (window.__gcDebug) { window.__gcDebug.push(url); return; }  // used only for testing
+    if (local) return;                                            // never count test visits
+    var img = new Image();
+    img.src = url;
+  }
+  function count(path, title, isEvent) {
+    send({
+      p: path, t: title, e: isEvent ? "true" : "false",
+      r: isEvent ? "" : document.referrer, q: isEvent ? "" : location.search,
+      s: screenSize, b: navigator.webdriver ? 153 : ""
+    });
+  }
+  count(location.pathname || "/phase1.html", document.title, false);
+  // only the result is counted (cell type and score), never the image
+  document.addEventListener("venkat:event", function (e) {
+    var d = e.detail || {};
+    if (d.path) count(String(d.path).slice(0, 200), d.title || "Phase 1", true);
+  });
+})();
+</script>
+</body>
+</html>
